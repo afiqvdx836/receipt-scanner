@@ -11,7 +11,7 @@ export interface MerchantRule {
 
 const STORAGE_KEY = 'receipt_scanner_merchant_memory_v1'
 
-const DEFAULT_PRESETS: MerchantRule[] = [
+export const DEFAULT_PRESETS: MerchantRule[] = [
   {
     storeName: 'Jaya Grocer',
     normalizedName: 'Jaya Grocer',

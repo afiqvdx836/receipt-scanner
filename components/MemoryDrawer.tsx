@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import {
   getLearnedRules,
   deleteMerchantRule,
@@ -8,6 +8,7 @@ import {
   getMemoryStats,
   MerchantRule,
   saveMerchantCorrection,
+  DEFAULT_PRESETS,
 } from '@/lib/memory'
 import { X, Brain, Trash2, Plus, CheckCircle2, RotateCcw } from 'lucide-react'
 
@@ -18,8 +19,8 @@ interface MemoryDrawerProps {
 }
 
 export default function MemoryDrawer({ isOpen, onClose, onRulesUpdated }: MemoryDrawerProps) {
-  const [rules, setRules] = useState<MerchantRule[]>(() => getLearnedRules())
-  const [stats, setStats] = useState(() => getMemoryStats())
+  const [rules, setRules] = useState<MerchantRule[]>(DEFAULT_PRESETS)
+  const [stats, setStats] = useState({ totalMerchants: 2, totalCorrections: 2, accuracyEstimate: 92.0 })
   const [showAddForm, setShowAddForm] = useState(false)
   const [newStore, setNewStore] = useState('')
   const [newCategory, setNewCategory] = useState('Meals & Dining')
@@ -27,6 +28,13 @@ export default function MemoryDrawer({ isOpen, onClose, onRulesUpdated }: Memory
   const [newNote, setNewNote] = useState('')
   const [taxInclusive, setTaxInclusive] = useState(true)
   const [savedSuccess, setSavedSuccess] = useState(false)
+
+  useEffect(() => {
+    if (isOpen) {
+      setRules(getLearnedRules())
+      setStats(getMemoryStats())
+    }
+  }, [isOpen])
 
   function reload() {
     const loaded = getLearnedRules()
