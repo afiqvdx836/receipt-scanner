@@ -1,11 +1,11 @@
-'use client'
+"use client";
 
-import { useState, useRef, useEffect } from 'react'
-import { scanReceipt, ReceiptData } from './actions/scan'
-import ReceiptInspector from '@/components/ReceiptInspector'
-import MemoryDrawer from '@/components/MemoryDrawer'
-import { SAMPLE_RECEIPTS, SampleReceipt } from '@/lib/samples'
-import { getMemoryStats, getFewShotPromptForMerchant } from '@/lib/memory'
+import { useState, useRef, useEffect } from "react";
+import { scanReceipt, ReceiptData } from "./actions/scan";
+import ReceiptInspector from "@/components/ReceiptInspector";
+import MemoryDrawer from "@/components/MemoryDrawer";
+import { SAMPLE_RECEIPTS, SampleReceipt } from "@/lib/samples";
+import { getMemoryStats, getFewShotPromptForMerchant } from "@/lib/memory";
 import {
   Upload,
   Loader2,
@@ -15,124 +15,135 @@ import {
   CheckCircle2,
   Layers,
   ArrowRight,
-} from 'lucide-react'
+} from "lucide-react";
 
 export default function Home() {
-  const [selectedFile, setSelectedFile] = useState<File | null>(null)
-  const [preview, setPreview] = useState<string | null>(null)
-  const [result, setResult] = useState<ReceiptData | null>(null)
-  const [loading, setLoading] = useState(false)
-  const [loadingStage, setLoadingStage] = useState('Analyzing document structure...')
-  const [error, setError] = useState<string | null>(null)
-  const [isDragging, setIsDragging] = useState(false)
-  const [isMemoryOpen, setIsMemoryOpen] = useState(false)
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [preview, setPreview] = useState<string | null>(null);
+  const [result, setResult] = useState<ReceiptData | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [loadingStage, setLoadingStage] = useState(
+    "Analyzing document structure...",
+  );
+  const [error, setError] = useState<string | null>(null);
+  const [isDragging, setIsDragging] = useState(false);
+  const [isMemoryOpen, setIsMemoryOpen] = useState(false);
   const [memoryStats, setMemoryStats] = useState({
     totalMerchants: 2,
     totalCorrections: 2,
     accuracyEstimate: 92.0,
-  })
-  const inputRef = useRef<HTMLInputElement>(null)
+  });
+  const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    setMemoryStats(getMemoryStats())
-  }, [])
+    setMemoryStats(getMemoryStats());
+  }, []);
 
   function refreshMemory() {
-    setMemoryStats(getMemoryStats())
+    setMemoryStats(getMemoryStats());
   }
 
   function handleFile(file: File) {
-    if (!file.type.startsWith('image/')) {
-      setError('Please upload a valid image file in PNG, JPG, or WEBP format.')
-      return
+    if (!file.type.startsWith("image/")) {
+      setError("Please upload a valid image file in PNG, JPG, or WEBP format.");
+      return;
     }
-    setSelectedFile(file)
-    setResult(null)
-    setError(null)
-    const url = URL.createObjectURL(file)
-    setPreview(url)
+    setSelectedFile(file);
+    setResult(null);
+    setError(null);
+    const url = URL.createObjectURL(file);
+    setPreview(url);
   }
 
   function handleChange(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0]
-    if (file) handleFile(file)
+    const file = e.target.files?.[0];
+    if (file) handleFile(file);
   }
 
   function handleDragOver(e: React.DragEvent) {
-    e.preventDefault()
-    setIsDragging(true)
+    e.preventDefault();
+    setIsDragging(true);
   }
 
   function handleDragLeave() {
-    setIsDragging(false)
+    setIsDragging(false);
   }
 
   function handleDrop(e: React.DragEvent) {
-    e.preventDefault()
-    setIsDragging(false)
-    const file = e.dataTransfer.files?.[0]
-    if (file) handleFile(file)
+    e.preventDefault();
+    setIsDragging(false);
+    const file = e.dataTransfer.files?.[0];
+    if (file) handleFile(file);
   }
 
   function handleReset() {
-    setSelectedFile(null)
-    setPreview(null)
-    setResult(null)
-    setError(null)
-    if (inputRef.current) inputRef.current.value = ''
+    setSelectedFile(null);
+    setPreview(null);
+    setResult(null);
+    setError(null);
+    if (inputRef.current) inputRef.current.value = "";
   }
 
   function openFilePicker() {
     if (inputRef.current) {
-      inputRef.current.value = ''
-      inputRef.current.click()
+      inputRef.current.value = "";
+      inputRef.current.click();
     }
   }
 
   async function handleScan(fileToScan?: File) {
-    const file = fileToScan || selectedFile
-    if (!file) return
+    const file = fileToScan || selectedFile;
+    if (!file) return;
 
-    setLoading(true)
-    setError(null)
-    setLoadingStage('Detecting merchant and layout structure...')
+    setLoading(true);
+    setError(null);
+    setLoadingStage("Detecting merchant and layout structure...");
 
     const t1 = setTimeout(() => {
-      setLoadingStage('Extracting line items and tax breakdown...')
-    }, 1200)
+      setLoadingStage("Extracting line items and tax breakdown...");
+    }, 1200);
 
     const t2 = setTimeout(() => {
-      setLoadingStage('Cross-checking mathematical reconciliation...')
-    }, 2400)
+      setLoadingStage("Cross-checking mathematical reconciliation...");
+    }, 2400);
 
     try {
-      const formData = new FormData()
-      formData.append('receipt', file)
+      const formData = new FormData();
+      formData.append("receipt", file);
 
       // Query any learned memory rules from persistent storage
-      const learnedPrompt = getFewShotPromptForMerchant(file.name.replace(/\.[^/.]+$/, ''))
+      const learnedPrompt = getFewShotPromptForMerchant(
+        file.name.replace(/\.[^/.]+$/, ""),
+      );
       if (learnedPrompt) {
-        formData.append('learnedMemory', learnedPrompt)
+        formData.append("learnedMemory", learnedPrompt);
       }
 
-      const data = await scanReceipt(formData)
-      setResult(data)
+      const result = await scanReceipt(formData);
+      if (!result.success) {
+        setError(result.error);
+      } else {
+        setResult(result.data);
+      }
     } catch (err: unknown) {
-      console.error('Scan error:', err)
-      const message = err instanceof Error ? err.message : 'Failed to process receipt. Please try again.'
-      setError(message)
+      console.error("Scan error:", err);
+      const message =
+        err instanceof Error
+          ? err.message
+          : "Failed to process receipt. Please try again.";
+      setError(message);
     } finally {
-      clearTimeout(t1)
-      clearTimeout(t2)
-      setLoading(false)
+      clearTimeout(t1);
+      clearTimeout(t2);
+      setLoading(false);
     }
   }
 
   function loadSample(sample: SampleReceipt) {
-    setSelectedFile(null)
-    setPreview(sample.previewUrl)
-    setResult(sample.data)
-    setError(null)
+    setSelectedFile(null);
+    setPreview(sample.previewUrl);
+    setResult(sample.data);
+    setError(null);
   }
 
   return (
@@ -143,7 +154,9 @@ export default function Home() {
           <div className="h-7 w-7 rounded-lg bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center text-emerald-400">
             <Receipt className="h-4 w-4" />
           </div>
-          <span className="text-sm font-semibold tracking-tight text-zinc-100">Chronicle</span>
+          <span className="text-sm font-semibold tracking-tight text-zinc-100">
+            Chronicle
+          </span>
           <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-zinc-900 border border-zinc-800 text-zinc-400">
             v2.0
           </span>
@@ -187,7 +200,8 @@ export default function Home() {
                 Self-Learning Financial Receipt Scanner.
               </h1>
               <p className="text-sm text-zinc-400 max-w-lg mx-auto leading-relaxed">
-                Autonomous high-precision extraction, mathematical reconciliation, and adaptive merchant memory.
+                Autonomous high-precision extraction, mathematical
+                reconciliation, and adaptive merchant memory.
               </p>
             </div>
 
@@ -196,7 +210,7 @@ export default function Home() {
               ref={inputRef}
               type="file"
               accept="image/png, image/jpeg, image/webp"
-              style={{ display: 'none' }}
+              style={{ display: "none" }}
               onChange={handleChange}
             />
 
@@ -208,14 +222,14 @@ export default function Home() {
                   role="button"
                   tabIndex={0}
                   onClick={openFilePicker}
-                  onKeyDown={(e) => e.key === 'Enter' && openFilePicker()}
+                  onKeyDown={(e) => e.key === "Enter" && openFilePicker()}
                   onDrop={handleDrop}
                   onDragOver={handleDragOver}
                   onDragLeave={handleDragLeave}
                   className={`flex flex-col items-center justify-center gap-4 border-2 border-dashed rounded-xl p-12 text-center cursor-pointer transition-all ${
                     isDragging
-                      ? 'border-emerald-500 bg-emerald-500/5 scale-[0.99]'
-                      : 'border-zinc-800 hover:border-zinc-700 bg-zinc-950/60 hover:bg-zinc-950'
+                      ? "border-emerald-500 bg-emerald-500/5 scale-[0.99]"
+                      : "border-zinc-800 hover:border-zinc-700 bg-zinc-950/60 hover:bg-zinc-950"
                   }`}
                 >
                   <div className="h-12 w-12 rounded-xl bg-zinc-900 border border-zinc-800 flex items-center justify-center text-zinc-400">
@@ -304,7 +318,9 @@ export default function Home() {
                   <span className="font-mono text-[11px] uppercase tracking-wider">
                     Instant Test Presets
                   </span>
-                  <span className="text-[11px] text-zinc-500">Zero upload required</span>
+                  <span className="text-[11px] text-zinc-500">
+                    Zero upload required
+                  </span>
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
                   {SAMPLE_RECEIPTS.map((sample) => (
@@ -321,7 +337,9 @@ export default function Home() {
                       </div>
                       <div className="flex items-center justify-between mt-1 text-[11px] text-zinc-500 font-mono">
                         <span>{sample.category}</span>
-                        <span className="text-zinc-300 font-medium">{sample.totalFormatted}</span>
+                        <span className="text-zinc-300 font-medium">
+                          {sample.totalFormatted}
+                        </span>
                       </div>
                     </button>
                   ))}
@@ -337,7 +355,8 @@ export default function Home() {
                   <span>Math Reconciliation</span>
                 </div>
                 <p className="leading-relaxed text-zinc-500">
-                  Automated checksum engine flags discrepancies between item totals, taxes, and grand totals.
+                  Automated checksum engine flags discrepancies between item
+                  totals, taxes, and grand totals.
                 </p>
               </div>
 
@@ -347,7 +366,8 @@ export default function Home() {
                   <span>Merchant Memory</span>
                 </div>
                 <p className="leading-relaxed text-zinc-500">
-                  Corrections train persistent rules for tax behavior, categories, and store aliases.
+                  Corrections train persistent rules for tax behavior,
+                  categories, and store aliases.
                 </p>
               </div>
 
@@ -357,7 +377,8 @@ export default function Home() {
                   <span>Dual Document Canvas</span>
                 </div>
                 <p className="leading-relaxed text-zinc-500">
-                  Side-by-side inspection with zoom, rotation, and high-contrast thermal paper enhancement.
+                  Side-by-side inspection with zoom, rotation, and high-contrast
+                  thermal paper enhancement.
                 </p>
               </div>
             </div>
@@ -372,5 +393,5 @@ export default function Home() {
         onRulesUpdated={refreshMemory}
       />
     </main>
-  )
+  );
 }
